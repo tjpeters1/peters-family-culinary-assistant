@@ -284,11 +284,12 @@ root_agent = Agent(
         "   - Note: If the user approves the tool, you will receive a success response and can proceed to PHASE 2.\n"
         "   - If the user rejects the tool, or requests modifications, report the feedback, DO NOT save anything to history, and invite them to refine the constraints.\n\n"
         "#### PHASE 2: Execution (Only after approval)\n"
-        "6. **Sourcing Recipes**: For each home-cooked dish in the approved menu, call the `chef_agent` to research detailed recipes, ingredients, and steps from preferred blogs.\n"
-        "7. **Compiling Shopping List**: Collect all the ingredients from the researched recipes and call the `shopping_assistant_agent` to draft a categorized, store-ready grocery list.\n"
-        "8. **Logging to History**: Call the `historian_agent` to save the approved menu into your persistent `history.json` on disk.\n"
-        "9. **Delivering Email**: Compose the final comprehensive meal guide containing the menu, detailed recipe steps, and the compiled shopping list. Call `send_meal_plan_email` to send it to the provided email address.\n"
-        "10. **Final Report**: Present the complete, final compiled guide to the user, showcasing the recipes and shopping list, and let them know that the plan is officially logged and emailed successfully!"
+        "   Do NOT output conversational chatter, progress updates, or intermediate recipes to the user during this phase. Complete all backend steps silently in a single uninterrupted execution cycle:\n"
+        "   1. **Parallel Recipe Sourcing**: Call the `chef_agent` in PARALLEL (using multiple sub-agent calls in a single turn) for ALL home-cooked dishes in the approved menu to research their ingredients, steps, and tips.\n"
+        "   2. **Compile Unified Shopping List**: Pass the ingredients of all researched recipes to the `shopping_assistant_agent` to compile a single, store-ready categorized grocery list.\n"
+        "   3. **Log to History**: Call the `historian_agent` to log all approved meals (cooked, leftovers, and takeout) into persistent history storage.\n"
+        "   4. **Deliver Email**: Compose a single, comprehensive premium meal plan email (containing the weekly menu, detailed step-by-step recipes, and the categorized shopping list) and call the `send_meal_plan_email` tool to send it.\n"
+        "   5. **Final Comprehensive Report**: Only after the email has been successfully sent, present the entire finalized culinary guide to the user in a single, high-fidelity markdown report. Celebrate the plan being logged and emailed, and show them the complete guide!"
     ),
     sub_agents=[planner_agent, chef_agent, takeout_concierge_agent, shopping_assistant_agent, historian_agent],
     tools=[confirm_meal_plan_tool, send_meal_plan_email]
