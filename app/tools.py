@@ -257,6 +257,7 @@ def search_recipe_blogs(dish_name: str, preferred_blog: str) -> Dict[str, Any]:
 def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -> Dict[str, Any]:
     """Sends the finalized weekly meal plan, recipes, and shopping list to the provided email address.
     To allow verification and auditability, this tool writes the sent email to a persistent markdown file under app/data/sent_emails/.
+    Additionally, if a RESEND_API_KEY environment variable is configured, it will deliver an actual email via the Resend API.
 
     Args:
         email_address: The recipient's email address (e.g., 'tj@example.com').
@@ -284,16 +285,79 @@ def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -
     try:
         with open(email_file, "w", encoding="utf-8") as f:
             f.write(email_content)
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to write email to local outbox: {str(e)}"
+        }
+
+    # Check for Resend API Key
+    resend_key = os.environ.get("RESEND_API_KEY")
+    if not resend_key:
         return {
             "status": "success",
-            "message": f"Email successfully 'sent' to {email_address}!",
+            "message": f"Email successfully 'sent' to {email_address}! (Note: RESEND_API_KEY is not set, so it was only written to the local outbox directory.)",
             "subject": subject,
+            "filepath": str(email_file.absolute())
+        }
+
+    import re
+    import urllib.request
+    import urllib.error
+
+    # Simple Markdown to HTML converter for beautiful email rendering
+    html_content = body_markdown
+    # Convert strong text: **text** -> <strong>text</strong>
+    html_content = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", html_content)
+    # Convert headers: ## text -> <h2>text</h2>, # text -> <h1>text</h1>
+    html_content = re.sub(r"## (.*?)\n", r"<h2>\1</h2>", html_content)
+    html_content = re.sub(r"# (.*?)\n", r"<h1>\1</h1>", html_content)
+    # Convert bullet points: * text -> <li>text</li>
+    html_content = re.sub(r"\* (.*?)\n", r"<li>\1</li>\n", html_content)
+    # Wrap series of <li> elements with <ul> if needed, or simply preserve formatting with <br>
+    html_content = html_content.replace("\n", "<br>")
+
+    # Prepare Resend email payload
+    payload = {
+        "from": "Culinary Assistant <onboarding@resend.dev>",
+        "to": [email_address],
+        "subject": subject,
+        "html": f"<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>{html_content}</body></html>"
+    }
+
+    req_data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=req_data,
+        headers={
+            "Authorization": f"Bearer {resend_key}",
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            resp_body = response.read().decode("utf-8")
+            return {
+                "status": "success",
+                "message": f"Actual email successfully sent to {email_address} via Resend API!",
+                "subject": subject,
+                "filepath": str(email_file.absolute()),
+                "resend_response": json.loads(resp_body)
+            }
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8")
+        return {
+            "status": "error",
+            "message": f"Resend API failed with status {e.code}: {err_msg}",
             "filepath": str(email_file.absolute())
         }
     except Exception as e:
         return {
             "status": "error",
-            "message": f"Failed to send email: {str(e)}"
+            "message": f"Failed to deliver email through Resend: {str(e)}",
+            "filepath": str(email_file.absolute())
         }
 
 def confirm_and_execute_meal_plan(proposal: str, email_address: str) -> Dict[str, Any]:
