@@ -305,24 +305,156 @@ def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -
     import urllib.request
     import urllib.error
 
-    # Simple Markdown to HTML converter for beautiful email rendering
-    html_content = body_markdown
-    # Convert strong text: **text** -> <strong>text</strong>
-    html_content = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", html_content)
-    # Convert headers: ## text -> <h2>text</h2>, # text -> <h1>text</h1>
-    html_content = re.sub(r"## (.*?)\n", r"<h2>\1</h2>", html_content)
-    html_content = re.sub(r"# (.*?)\n", r"<h1>\1</h1>", html_content)
-    # Convert bullet points: * text -> <li>text</li>
-    html_content = re.sub(r"\* (.*?)\n", r"<li>\1</li>\n", html_content)
-    # Wrap series of <li> elements with <ul> if needed, or simply preserve formatting with <br>
-    html_content = html_content.replace("\n", "<br>")
+    # Premium Markdown to HTML compiler with support for headers, lists, tables, bolding, and links
+    def compile_markdown_to_premium_html(md_text: str) -> str:
+        lines = md_text.split("\n")
+        html_lines = []
+        in_list = False
+        in_table = False
+        is_header_row = True
+        
+        for line in lines:
+            line_stripped = line.strip()
+            if not line_stripped:
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                if in_table:
+                    html_lines.append("</table>")
+                    in_table = False
+                continue
+                
+            # Parse Markdown tables
+            if line_stripped.startswith("|"):
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                    
+                if not in_table:
+                    html_lines.append("<table cellpadding='8' cellspacing='0' style='width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; border: 1px solid #E5E7EB; font-size: 13px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);'>")
+                    in_table = True
+                    is_header_row = True
+                    
+                cells = [c.strip() for c in line_stripped.split("|")[1:-1]]
+                # Skip the table formatting/alignment row (e.g. |---|---|)
+                if all(re.match(r"^:?-+:?$", cell) for cell in cells):
+                    continue
+                    
+                if is_header_row:
+                    html_lines.append("<tr style='background-color: #0F766E; color: #FFFFFF;'>")
+                    for cell in cells:
+                        html_lines.append(f"<th style='text-align: left; font-weight: 700; border: 1px solid #0D9488; padding: 10px;'>{cell}</th>")
+                    html_lines.append("</tr>")
+                    is_header_row = False
+                else:
+                    html_lines.append("<tr style='background-color: #FFFFFF;'>")
+                    for cell in cells:
+                        cell = re.sub(r"\*\*(.*?)\*\*", r"<strong style='color: #111827;'>\1</strong>", cell)
+                        html_lines.append(f"<td style='color: #4B5563; border: 1px solid #E5E7EB; padding: 10px;'>{cell}</td>")
+                    html_lines.append("</tr>")
+                continue
+
+            # If a table row was active but this line isn't part of a table, close the table
+            if in_table:
+                html_lines.append("</table>")
+                in_table = False
+
+            # Parse headers
+            if line_stripped.startswith("### "):
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                title = line_stripped[4:].strip()
+                html_lines.append(f"<h3 style='color: #0F766E; font-size: 1.15em; font-weight: 700; margin-top: 20px; margin-bottom: 8px; border-bottom: 1px dashed #CCFBF1; padding-bottom: 4px;'>{title}</h3>")
+            elif line_stripped.startswith("## "):
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                title = line_stripped[3:].strip()
+                html_lines.append(f"<h2 style='color: #0F766E; font-size: 1.4em; font-weight: 800; margin-top: 25px; margin-bottom: 12px; border-bottom: 2px solid #0D9488; padding-bottom: 6px;'>{title}</h2>")
+            elif line_stripped.startswith("# "):
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                title = line_stripped[2:].strip()
+                html_lines.append(f"<h1 style='color: #111827; font-size: 1.8em; text-align: center; margin-bottom: 24px; font-weight: 800; border-bottom: 3px solid #0D9488; padding-bottom: 10px; letter-spacing: -0.5px;'>{title}</h1>")
+            
+            # Parse bulleted lists
+            elif line_stripped.startswith("* ") or line_stripped.startswith("- "):
+                if not in_list:
+                    html_lines.append("<ul style='padding-left: 20px; margin-top: 5px; margin-bottom: 12px;'>")
+                    in_list = True
+                content = line_stripped[2:].strip()
+                content = re.sub(r"\*\*(.*?)\*\*", r"<strong style='color: #111827;'>\1</strong>", content)
+                content = re.sub(r"\[(.*?)\]\((.*?)\)", r"<a href='\2' style='color: #0D9488; text-decoration: none; font-weight: 500;'>\1</a>", content)
+                html_lines.append(f"<li style='margin-bottom: 6px; color: #4B5563; font-size: 14px;'>{content}</li>")
+                
+            # Parse standard paragraphs
+            else:
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                content = line_stripped
+                content = re.sub(r"\*\*(.*?)\*\*", r"<strong style='color: #111827;'>\1</strong>", content)
+                content = re.sub(r"\[(.*?)\]\((.*?)\)", r"<a href='\2' style='color: #0D9488; text-decoration: none; font-weight: 500;'>\1</a>", content)
+                html_lines.append(f"<p style='margin-top: 6px; margin-bottom: 12px; color: #4B5563; font-size: 14px; line-height: 1.6;'>{content}</p>")
+                
+        if in_list:
+            html_lines.append("</ul>")
+        if in_table:
+            html_lines.append("</table>")
+            
+        return "\n".join(html_lines)
+
+    html_content = compile_markdown_to_premium_html(body_markdown)
+
+    # Wrap inside our responsive, modern premium container template
+    premium_template = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #F3F4F6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F3F4F6; padding: 25px 10px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card Container -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border: 1px solid #E5E7EB;">
+          <!-- Header Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0F766E, #0D9488); padding: 35px 24px; text-align: center;">
+              <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">Peters Family Culinary Assistant</h1>
+              <p style="margin: 6px 0 0 0; color: #CCFBF1; font-size: 14px; font-weight: 500; letter-spacing: 0.2px;">Weekly Dinner Guide, Recipes & Shopping List</p>
+            </td>
+          </tr>
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 35px 30px; background-color: #FFFFFF;">
+              {html_content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #F9FAFB; padding: 25px; text-align: center; border-top: 1px solid #E5E7EB;">
+              <p style="margin: 0; color: #9CA3AF; font-size: 12px; font-weight: 500;">Generated with ❤️ by your Peters Family Culinary Assistant</p>
+              <p style="margin: 5px 0 0 0; color: #D1D5DB; font-size: 11px;">GCP Agent Runtime • tjpeters-experiment-sandbox</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
 
     # Prepare Resend email payload
     payload = {
         "from": "Culinary Assistant <onboarding@resend.dev>",
         "to": [email_address],
         "subject": subject,
-        "html": f"<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>{html_content}</body></html>"
+        "html": premium_template
     }
 
     req_data = json.dumps(payload).encode("utf-8")
