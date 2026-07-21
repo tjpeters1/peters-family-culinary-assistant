@@ -14,3 +14,6 @@
 ## Favorite Takeout Restaurants
 * **Burger Town** (Chicken Tenders & Fries)
 * **Pizza Bella** (Spaghetti with butter or marinara)
+
+## Preferred Quick Alternative Meal
+* Boxed Mac and Cheese

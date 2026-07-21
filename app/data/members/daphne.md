@@ -14,3 +14,6 @@
 ## Favorite Takeout Restaurants
 * **Taco Loco** (Plain Cheese Quesadilla)
 * **Burger Town** (French Fries and Chocolate Milkshake)
+
+## Preferred Quick Alternative Meal
+* Boxed Mac and Cheese

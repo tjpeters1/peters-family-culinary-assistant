@@ -14,3 +14,6 @@
 ## Favorite Takeout Restaurants
 * **Pizza Bella** (Always orders the classic Cheese Pizza)
 * **Burger Town** (Excellent beef burgers, crispy French fries, and vanilla milkshakes)
+
+## Preferred Quick Alternative Meal
+* Boxed Mac and Cheese
