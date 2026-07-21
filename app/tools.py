@@ -331,7 +331,8 @@ def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -
         data=req_data,
         headers={
             "Authorization": f"Bearer {resend_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "peters-culinary-assistant/1.0"
         },
         method="POST"
     )
