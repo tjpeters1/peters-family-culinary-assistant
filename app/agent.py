@@ -37,6 +37,42 @@ from app.tools import (
 )
 
 # ==========================================
+# Replay fallback tools to prevent ValueError during session restoration
+# ==========================================
+def fallback_planner_agent(request: str) -> Dict[str, Any]:
+    """Fallback tool representing the planner sub-agent. This is used to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_planner_agent.__name__ = "planner_agent"
+
+def fallback_chef_agent(request: str) -> Dict[str, Any]:
+    """Fallback tool representing the chef sub-agent. This is used to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_chef_agent.__name__ = "chef_agent"
+
+def fallback_takeout_concierge_agent(request: str) -> Dict[str, Any]:
+    """Fallback tool representing the takeout concierge sub-agent. This is used to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_takeout_concierge_agent.__name__ = "takeout_concierge_agent"
+
+def fallback_shopping_assistant_agent(request: str) -> Dict[str, Any]:
+    """Fallback tool representing the shopping assistant sub-agent. This is used to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_shopping_assistant_agent.__name__ = "shopping_assistant_agent"
+
+def fallback_historian_agent(request: str) -> Dict[str, Any]:
+    """Fallback tool representing the historian sub-agent. This is used to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_historian_agent.__name__ = "historian_agent"
+
+replay_fallback_tools = [
+    fallback_planner_agent,
+    fallback_chef_agent,
+    fallback_takeout_concierge_agent,
+    fallback_shopping_assistant_agent,
+    fallback_historian_agent
+]
+
+# ==========================================
 # 1. Pydantic Schemas for Structured Delegation
 # ==========================================
 
@@ -125,7 +161,7 @@ planner_agent = Agent(
         "7. Note: Family favorite dishes are a guide, not a strict limit. Feel free to introduce new, interesting dishes that fit their flavor preferences!\n"
         "8. Once your plan is complete, format it into the WeeklyMealPlan schema and return it."
     ),
-    tools=[list_household_members, get_household_member_profile, get_meal_history, get_current_date]
+    tools=[list_household_members, get_household_member_profile, get_meal_history, get_current_date] + replay_fallback_tools
 )
 
 chef_agent = Agent(
@@ -145,7 +181,7 @@ chef_agent = Agent(
         "3. Extract and synthesize the recipe title, list of ingredients, cooking steps, source URL (with working link), and append helpful chef tips.\n"
         "4. Return the recipe structured in the RecipeResearchResult schema."
     ),
-    tools=[get_preferred_blogs, search_recipe_blogs]
+    tools=[get_preferred_blogs, search_recipe_blogs] + replay_fallback_tools
 )
 
 takeout_concierge_agent = Agent(
@@ -166,7 +202,7 @@ takeout_concierge_agent = Agent(
         "4. Design the specific ordered items for each active family member.\n"
         "5. Return the finalized plan structured in the TakeoutPlan schema."
     ),
-    tools=[list_household_members, get_household_member_profile]
+    tools=[list_household_members, get_household_member_profile] + replay_fallback_tools
 )
 
 shopping_assistant_agent = Agent(
@@ -187,7 +223,7 @@ shopping_assistant_agent = Agent(
         "4. Provide intelligent substitution suggestions, kid-friendly adjustments, or common pantry items the user might already have.\n"
         "5. Return the list structured in the ShoppingList schema."
     ),
-    tools=[]
+    tools=[] + replay_fallback_tools
 )
 
 historian_agent = Agent(
@@ -207,7 +243,7 @@ historian_agent = Agent(
         "3. For each meal (cooked, leftovers, takeout), log it by calling `add_meal_to_history` with the calculated date, dish, eaters, and any notes/restaurant names.\n"
         "4. After successfully logging all items, return the logged entries and status using the HistoricalSaveResult schema."
     ),
-    tools=[add_meal_to_history, get_meal_history, get_current_date]
+    tools=[add_meal_to_history, get_meal_history, get_current_date] + replay_fallback_tools
 )
 
 # ==========================================
