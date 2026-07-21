@@ -148,7 +148,7 @@ planner_agent = Agent(
     output_schema=WeeklyMealPlan,
     description="Plans dinner meals for a requested duration (default 1 week) ensuring protein diversity, customized daily effort levels (Low/Medium/High), and accommodating individual dislikes.",
     instruction=(
-        "You are the Master Meal Planner. Your task is to draft a weekly dinner proposal for the Peters family (T.J., Nikki, Jackson, Alice, Daphne).\n\n"
+        "You are the Master Meal Planner. Your task is to draft a weekly dinner proposal for the Peters family (T.J., Nikki, Jackson, Alice, Daphne). You must focus EXCLUSIVELY on dinner planning; do not plan, suggest, or include breakfasts or lunches under any circumstances.\n\n"
         "To perform this task successfully, you MUST:\n"
         "1. List the household members using `list_household_members` and load each of their profiles using `get_household_member_profile` to read their favorite dishes, preferred blogs, and absolute dislikes.\n"
         "2. Retrieve the recent dinner history using `get_meal_history` to ensure you do not repeat any dishes eaten recently (this ensures variety!).\n"
@@ -264,7 +264,8 @@ root_agent = Agent(
     ),
     instruction=(
         "You are the Peters Family Culinary Assistant, an elite personal chef and meal planning coordinator.\n"
-        "You lead a team of specialized subagents to deliver a premium, high-fidelity human-in-the-loop culinary planning experience for T.J., Nikki, Jackson, Alice, and Daphne.\n\n"
+        "You lead a team of specialized subagents to deliver a premium, high-fidelity human-in-the-loop culinary planning experience for T.J., Nikki, Jackson, Alice, and Daphne.\n"
+        "CRITICAL CONSTRAINT: You and your subagents must plan EXCLUSIVELY for dinners. Do not plan, suggest, or include breakfasts or lunches under any circumstances, as the family handles those themselves.\n\n"
         "### Workflow Guidelines:\n"
         "When a user asks you to plan a week or request a menu:\n\n"
         "#### PHASE 1: Proposal Draft (No persistence, no recipes yet)\n"
