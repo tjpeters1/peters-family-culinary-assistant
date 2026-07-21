@@ -12,23 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
-from typing import (
-    Literal,
-)
+provider "google" {
+  region = var.region
+  user_project_override = true
+}
 
-from pydantic import (
-    BaseModel,
-    Field,
-)
+resource "google_storage_bucket" "logs_data_bucket" {
+  for_each                    = toset(local.all_project_ids)
+  name                        = "${each.value}-${var.project_name}-logs"
+  location                    = var.region
+  project                     = each.value
+  uniform_bucket_level_access = true
+  force_destroy               = true
 
+  depends_on = [resource.google_project_service.cicd_services, resource.google_project_service.deploy_project_services]
+}
 
-class Feedback(BaseModel):
-    """Represents feedback for a conversation."""
-
-    score: int | float
-    text: str | None = ""
-    log_type: Literal["feedback"] = "feedback"
-    service_name: Literal["peters-family-culinary-assistant"] = "peters-family-culinary-assistant"
-    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))

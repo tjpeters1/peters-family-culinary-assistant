@@ -1,0 +1,306 @@
+[
+  {
+    "date": "2026-07-13",
+    "meal_type": "dinner",
+    "dish": "Chicken Parmesan with Spaghetti",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": "Emily loved the pasta, TJ and Sarah enjoyed the chicken."
+  },
+  {
+    "date": "2026-07-14",
+    "meal_type": "dinner",
+    "dish": "Roasted Herb Chicken with Vegetables",
+    "eaters": [
+      "TJ",
+      "Sarah"
+    ],
+    "notes": "Emily ate Mac and Cheese instead because of the visible onions and roasted zucchini."
+  },
+  {
+    "date": "2026-07-15",
+    "meal_type": "dinner",
+    "dish": "Leftovers Night (Chicken Parmesan & Roasted Chicken)",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": "Easy night, finished off the fridge."
+  },
+  {
+    "date": "2026-07-16",
+    "meal_type": "dinner",
+    "dish": "Spaghetti Bolognese",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": "Everyone ate together, classic comfort food."
+  },
+  {
+    "date": "2026-07-17",
+    "meal_type": "takeout",
+    "dish": "Sushi and Hand Rolls",
+    "restaurant": "Sushi Zen",
+    "eaters": [
+      "TJ",
+      "Sarah"
+    ],
+    "notes": "Emily had a Burger and Fries from Burger Town."
+  },
+  {
+    "date": "2026-07-18",
+    "meal_type": "takeout",
+    "dish": "Wood-fired Pepperoni & Cheese Pizza",
+    "restaurant": "Pizza Bella",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": "Emily had cheese pizza, TJ and Sarah had pepperoni."
+  },
+  {
+    "date": "2024-07-29",
+    "meal_type": "dinner",
+    "dish": "Crispy Chicken Tenders with Sweet Potato Fries",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": ""
+  },
+  {
+    "date": "2024-07-30",
+    "meal_type": "dinner",
+    "dish": "Thai Green Curry (Chicken)",
+    "eaters": [
+      "TJ",
+      "Sarah"
+    ],
+    "notes": "Emily will have Mac and Cheese"
+  },
+  {
+    "date": "2024-07-31",
+    "meal_type": "dinner",
+    "dish": "Leftovers Night",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": ""
+  },
+  {
+    "date": "2024-08-01",
+    "meal_type": "dinner",
+    "dish": "Homemade Burgers (Beef) with side salads",
+    "eaters": [
+      "TJ",
+      "Sarah",
+      "Emily"
+    ],
+    "notes": ""
+  },
+  {
+    "date": "2024-08-02",
+    "meal_type": "takeout",
+    "dish": "Pizza",
+    "eaters": [
+      "Emily",
+      "TJ",
+      "Sarah"
+    ],
+    "notes": "Emily: Classic Cheese Pizza, TJ: Wood-fired Pepperoni Pizza, Sarah: Margherita Pizza (no cilantro)",
+    "restaurant": "Pizza Bella"
+  },
+  {
+    "date": "2024-08-03",
+    "meal_type": "takeout",
+    "dish": "Burgers",
+    "eaters": [
+      "Emily",
+      "TJ",
+      "Sarah"
+    ],
+    "notes": "Emily: Excellent Beef Burger, Crispy French Fries, Vanilla Milkshake, TJ: Classic Cheeseburger (no olives, no mushrooms), French Fries, Sarah: Grilled Chicken Sandwich, Side Salad (no blue cheese, no cilantro)",
+    "restaurant": "Burger Town"
+  },
+  {
+    "date": "2024-08-04",
+    "meal_type": "dinner",
+    "dish": "Grilled Steak with Roasted Potatoes",
+    "eaters": [
+      "TJ",
+      "Sarah"
+    ],
+    "notes": "Emily will have Mac and Cheese"
+  },
+  {
+    "date": "2026-07-20",
+    "meal_type": "dinner",
+    "dish": "Carnitas Tacos with Lime Crema and Pickled Onions",
+    "eaters": [
+      "T.J."
+    ],
+    "notes": "Cooked by T.J., Serious Eats recipe"
+  },
+  {
+    "date": "2026-07-21",
+    "meal_type": "dinner",
+    "dish": "Crispy Chicken Tenders with Roasted Sweet Potato Fries",
+    "eaters": [
+      "Nikki"
+    ],
+    "notes": "Cooked by Nikki, Smitten Kitchen recipe, Low Effort"
+  },
+  {
+    "date": "2026-07-22",
+    "meal_type": "dinner",
+    "dish": "Leftovers",
+    "eaters": [
+      "T.J.",
+      "Nikki"
+    ],
+    "notes": "Leftovers Night"
+  },
+  {
+    "date": "2026-07-23",
+    "meal_type": "dinner",
+    "dish": "Ribeye Steak with Roasted Asparagus and Garlic Mash",
+    "eaters": [
+      "T.J."
+    ],
+    "notes": "Cooked by T.J., Serious Eats recipe"
+  },
+  {
+    "date": "2026-07-24",
+    "meal_type": "takeout",
+    "dish": "Italian/Pizza",
+    "eaters": [
+      "T.J.",
+      "Nikki"
+    ],
+    "notes": "",
+    "restaurant": "Pizza Bella"
+  },
+  {
+    "date": "2026-07-25",
+    "meal_type": "takeout",
+    "dish": "American/Burgers",
+    "eaters": [
+      "T.J.",
+      "Nikki"
+    ],
+    "notes": "",
+    "restaurant": "Burger Town"
+  },
+  {
+    "date": "2026-07-26",
+    "meal_type": "dinner",
+    "dish": "Grilled Salmon with Lemon-Dill Sauce, Roasted Potatoes, and Green Beans",
+    "eaters": [
+      "Nikki"
+    ],
+    "notes": "Cooked by Nikki, Smitten Kitchen recipe"
+  },
+  {
+    "date": "2026-07-20",
+    "meal_type": "dinner",
+    "dish": "Slow Cooker Pulled Pork Sandwiches with Coleslaw",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "Cooking Leader: T.J., Effort: High"
+  },
+  {
+    "date": "2026-07-20",
+    "meal_type": "dinner",
+    "dish": "Chicken Fajitas with Tortillas and Toppings",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "Cooking Leader: Nikki, Effort: Medium"
+  },
+  {
+    "date": "2026-07-21",
+    "meal_type": "dinner",
+    "dish": "Homemade Burgers with Buns and Toppings",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "Cooking Leader: Nikki, Effort: Low"
+  },
+  {
+    "date": "2026-07-22",
+    "meal_type": "dinner",
+    "dish": "Chicken Green Curry with Jasmine Rice",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "Cooking Leader: Nikki, Effort: Medium"
+  },
+  {
+    "date": "2026-07-23",
+    "meal_type": "dinner",
+    "dish": "Loaded Baked Potatoes with Beef Chili",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "Cooking Leader: T.J., Effort: Medium"
+  },
+  {
+    "date": "2026-07-24",
+    "meal_type": "takeout",
+    "dish": "Various Pizzas",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "T.J.: Wood-fired Pepperoni Pizza, Nikki: Margherita Pizza, Jackson: Classic Cheese Pizza, Alice: Spaghetti with marinara sauce, Daphne: Plain Cheese Pizza",
+    "restaurant": "Pizza Bella"
+  },
+  {
+    "date": "2026-07-25",
+    "meal_type": "takeout",
+    "dish": "Various Burgers and other items",
+    "eaters": [
+      "T.J.",
+      "Nikki",
+      "Jackson",
+      "Alice",
+      "Daphne"
+    ],
+    "notes": "T.J.: Classic Cheeseburger (no raw onions) with fries, Nikki: Grilled Chicken Salad with a side of fries, Jackson: Beef Burger (plain with cheese and ketchup) with crispy French fries and vanilla milkshake, Alice: Crispy Chicken Tenders & Fries with honey mustard, Daphne: Chicken Nuggets, French Fries and Chocolate Milkshake",
+    "restaurant": "Burger Town"
+  }
+]

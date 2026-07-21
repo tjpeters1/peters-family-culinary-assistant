@@ -12,23 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
-from typing import (
-    Literal,
-)
+output "app_service_account_emails" {
+  description = "Application service account emails by environment"
+  value       = { for k, v in google_service_account.app_sa : k => v.email }
+}
 
-from pydantic import (
-    BaseModel,
-    Field,
-)
+output "cicd_runner_service_account_email" {
+  description = "CI/CD runner service account email"
+  value       = google_service_account.cicd_runner_sa.email
+}
 
+output "logs_bucket_names" {
+  description = "Logs storage bucket names by environment"
+  value       = { for k, v in google_storage_bucket.logs_data_bucket : k => v.name }
+}
 
-class Feedback(BaseModel):
-    """Represents feedback for a conversation."""
-
-    score: int | float
-    text: str | None = ""
-    log_type: Literal["feedback"] = "feedback"
-    service_name: Literal["peters-family-culinary-assistant"] = "peters-family-culinary-assistant"
-    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
