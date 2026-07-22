@@ -514,6 +514,25 @@ def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -
     Returns:
         A dictionary indicating the email status and the path to the sent email file.
     """
+    # Runtime Guardrail Check: Restrict emails to approved family domains and addresses
+    email_clean = email_address.strip().lower()
+    allowed_domains = ["google.com", "gmail.com"]
+    allowed_emails = ["tj@example.com", "nikki@example.com"]
+    
+    is_valid = False
+    if email_clean in allowed_emails:
+        is_valid = True
+    else:
+        parts = email_clean.split("@")
+        if len(parts) == 2 and parts[1] in allowed_domains:
+            is_valid = True
+            
+    if not is_valid:
+        return {
+            "status": "security_violation",
+            "message": f"Action blocked: Recipient email address '{email_address}' is not on the authorized whitelist."
+        }
+
     emails_dir = DATA_DIR / "sent_emails"
     emails_dir.mkdir(parents=True, exist_ok=True)
     

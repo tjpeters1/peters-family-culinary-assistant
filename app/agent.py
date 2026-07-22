@@ -18,6 +18,7 @@ from typing import List, Dict, Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 from google.adk.agents import Agent
+from google.adk.agents.callback_context import CallbackContext
 from google.adk.apps import App, ResumabilityConfig
 from google.adk.models import Gemini
 from google.adk.tools import FunctionTool
@@ -37,6 +38,59 @@ from app.tools import (
     confirm_and_execute_meal_plan,
     search_local_restaurants
 )
+
+import re
+
+# ==========================================
+# Runtime Security Guardrails & Safety Configs
+# ==========================================
+culinary_safety_settings = [
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    ),
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    ),
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    ),
+]
+
+def prompt_injection_guardrail_callback(callback_context: CallbackContext) -> None:
+    """Inspects the user input content for common prompt injection patterns and raises ValueError if detected."""
+    user_content = callback_context.user_content
+    if not user_content:
+        return
+        
+    text_to_scan = ""
+    if isinstance(user_content, str):
+        text_to_scan = user_content
+    elif hasattr(user_content, "parts") and user_content.parts:
+        text_to_scan = " ".join([getattr(part, "text", "") for part in user_content.parts if getattr(part, "text", "")])
+    elif isinstance(user_content, list):
+        parts_list = []
+        for item in user_content:
+            if isinstance(item, str):
+                parts_list.append(item)
+            elif hasattr(item, "parts") and item.parts:
+                parts_list.extend([getattr(p, "text", "") for p in item.parts if getattr(p, "text", "")])
+        text_to_scan = " ".join(parts_list)
+        
+    if text_to_scan:
+        text_lower = text_to_scan.lower()
+        patterns = [
+            r"ignore previous instructions",
+            r"system prompt",
+            r"you are now a",
+            r"bypass security",
+            r"as a developer"
+        ]
+        for pattern in patterns:
+            if re.search(pattern, text_lower):
+                raise ValueError("Security Violation: Prompt injection attempt detected.")
 
 # ==========================================
 # Replay fallback tools to prevent ValueError during session restoration
@@ -155,7 +209,7 @@ class HistoricalSaveResult(BaseModel):
 planner_agent = Agent(
     name="planner_agent",
     model=Gemini(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-pro",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     mode="task",
@@ -285,9 +339,11 @@ confirm_meal_plan_tool = FunctionTool(
 root_agent = Agent(
     name="peters_family_culinary_assistant",
     model=Gemini(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-pro",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
+    generate_content_config=types.GenerateContentConfig(safety_settings=culinary_safety_settings),
+    before_agent_callback=prompt_injection_guardrail_callback,
     instruction=(
         "You are the Peters Family Culinary Assistant, an elite personal chef and meal planning coordinator.\n"
         "You lead a team of specialized subagents to deliver a premium, high-fidelity human-in-the-loop culinary planning experience for T.J., Nikki, Jackson, Alice, and Daphne.\n"
