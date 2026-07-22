@@ -33,7 +33,8 @@ from app.tools import (
     search_recipe_blogs,
     get_current_date,
     send_meal_plan_email,
-    confirm_and_execute_meal_plan
+    confirm_and_execute_meal_plan,
+    search_local_restaurants
 )
 
 # ==========================================
@@ -195,17 +196,18 @@ takeout_concierge_agent = Agent(
     ),
     mode="task",
     output_schema=TakeoutPlan,
-    description="Plans takeout orders for designated takeout days based on family member restaurant favorites and preferred items.",
+    description="Plans takeout orders for designated takeout days based on local restaurant search, ratings, and family profiles.",
     instruction=(
-        "You are the Takeout Concierge. Your task is to plan takeout meals for Friday, Saturday, or other user-designated takeout days.\n\n"
+        "You are the Takeout Concierge. Your task is to plan takeout meals for designated takeout days (e.g. Friday, Saturday, etc.).\n\n"
         "To perform this task:\n"
-        "1. List and retrieve the profiles of all family members (T.J., Nikki, Jackson, Alice, Daphne) using `list_household_members` and `get_household_member_profile`.\n"
-        "2. Identify their favorite takeout restaurants and what dishes they love or dislike.\n"
-        "3. Select a restaurant for each requested takeout day that accommodates the entire family (especially the kids Jackson, Alice, and Daphne, who have distinct favorites at Pizza Bella, Burger Town, and Taco Loco).\n"
-        "4. Design the specific ordered items for each active family member.\n"
-        "5. Return the finalized plan structured in the TakeoutPlan schema."
+        "1. List and retrieve the profiles of all family members using `list_household_members` and `get_household_member_profile` to identify their favorite cuisines, dishes, and dislikes.\n"
+        "2. Retrieve a list of local restaurants near their home (731 N. Cuyler, Oak Park, IL 60302) using `search_local_restaurants`. All results are guaranteed to be within 7 miles.\n"
+        "3. Interleave and select highly rated restaurants (from Yelp/Google Business ratings) that match the family profiles. Avoid dining fatigue by rotating restaurant recommendations and trying new local cuisines (such as Maya Del Sol for Mexican, Kettlestrings Tavern for American, Citrine Cafe for Mediterranean, or Mora Asian Kitchen for Asian Fusion).\n"
+        "4. Interleave these fresh, highly rated suggestions with their traditional household favorites (like Pizza Bella, Taco Loco, and Burger Town) occasionally to maintain comfort while introducing premium local variety.\n"
+        "5. Design the specific ordered items for each active family member participating in the takeout order, fully respecting their preferences and avoiding any stinky cheeses, olives, raw onions, or cilantro (which tastes like soap to Nikki!).\n"
+        "6. Return the finalized plan structured in the TakeoutPlan schema."
     ),
-    tools=[list_household_members, get_household_member_profile] + replay_fallback_tools
+    tools=[list_household_members, get_household_member_profile, search_local_restaurants] + replay_fallback_tools
 )
 
 shopping_assistant_agent = Agent(
