@@ -359,33 +359,51 @@ def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -
                 html_lines.append("</table>")
                 in_table = False
 
-            # Parse headers
-            if line_stripped.startswith("### "):
+            # Parse headers (any depth 1 to 6)
+            header_match = re.match(r"^(#{1,6})\s+(.*?)$", line_stripped)
+            if header_match:
                 if in_list:
                     html_lines.append("</ul>")
                     in_list = False
-                title = line_stripped[4:].strip()
+                level = len(header_match.group(1))
+                title = header_match.group(2).strip()
+                
+                # Strip trailing hashes (e.g. "### Ingredients ###" -> "Ingredients")
+                title = title.rstrip("#").strip()
+                
+                # Strip surrounding bold/emphasis asterisks or underscores from the heading title itself
+                title = re.sub(r"^[\*_]+(.*?)[\*_]+$", r"\1", title)
+                
+                if level == 1:
+                    html_lines.append(f"<h1 style='color: #111827; font-size: 1.8em; text-align: center; margin-top: 25px; margin-bottom: 24px; font-weight: 800; border-bottom: 3px solid #0D9488; padding-bottom: 10px; letter-spacing: -0.5px;'>{title}</h1>")
+                elif level == 2:
+                    html_lines.append(f"<h2 style='color: #0F766E; font-size: 1.4em; font-weight: 800; margin-top: 25px; margin-bottom: 12px; border-bottom: 2px solid #0D9488; padding-bottom: 6px;'>{title}</h2>")
+                else:
+                    html_lines.append(f"<h3 style='color: #0F766E; font-size: 1.15em; font-weight: 700; margin-top: 20px; margin-bottom: 8px; border-bottom: 1px dashed #CCFBF1; padding-bottom: 4px;'>{title}</h3>")
+                continue
+
+            # Detect standalone bold lines (e.g., "**Ingredients**" or "**Instructions:**") and treat them as clean subsections!
+            bold_line_match = re.match(r"^\*\*(.*?)\*\*:?$", line_stripped)
+            if bold_line_match and not (line_stripped.startswith("* ") or line_stripped.startswith("- ")):
+                if in_list:
+                    html_lines.append("</ul>")
+                    in_list = False
+                title = bold_line_match.group(1).strip()
                 html_lines.append(f"<h3 style='color: #0F766E; font-size: 1.15em; font-weight: 700; margin-top: 20px; margin-bottom: 8px; border-bottom: 1px dashed #CCFBF1; padding-bottom: 4px;'>{title}</h3>")
-            elif line_stripped.startswith("## "):
-                if in_list:
-                    html_lines.append("</ul>")
-                    in_list = False
-                title = line_stripped[3:].strip()
-                html_lines.append(f"<h2 style='color: #0F766E; font-size: 1.4em; font-weight: 800; margin-top: 25px; margin-bottom: 12px; border-bottom: 2px solid #0D9488; padding-bottom: 6px;'>{title}</h2>")
-            elif line_stripped.startswith("# "):
-                if in_list:
-                    html_lines.append("</ul>")
-                    in_list = False
-                title = line_stripped[2:].strip()
-                html_lines.append(f"<h1 style='color: #111827; font-size: 1.8em; text-align: center; margin-bottom: 24px; font-weight: 800; border-bottom: 3px solid #0D9488; padding-bottom: 10px; letter-spacing: -0.5px;'>{title}</h1>")
-            
+                continue
+
             # Parse bulleted lists
             elif line_stripped.startswith("* ") or line_stripped.startswith("- "):
                 if not in_list:
                     html_lines.append("<ul style='padding-left: 20px; margin-top: 5px; margin-bottom: 12px;'>")
                     in_list = True
                 content = line_stripped[2:].strip()
+                # Inline bolding
                 content = re.sub(r"\*\*(.*?)\*\*", r"<strong style='color: #111827;'>\1</strong>", content)
+                # Inline emphasis
+                content = re.sub(r"\*(.*?)\*", r"<em>\1</em>", content)
+                content = re.sub(r"_(.*?)_", r"<em>\1</em>", content)
+                # Inline links
                 content = re.sub(r"\[(.*?)\]\((.*?)\)", r"<a href='\2' style='color: #0D9488; text-decoration: none; font-weight: 500;'>\1</a>", content)
                 html_lines.append(f"<li style='margin-bottom: 6px; color: #4B5563; font-size: 14px;'>{content}</li>")
                 
@@ -395,7 +413,12 @@ def send_meal_plan_email(email_address: str, subject: str, body_markdown: str) -
                     html_lines.append("</ul>")
                     in_list = False
                 content = line_stripped
+                # Inline bolding
                 content = re.sub(r"\*\*(.*?)\*\*", r"<strong style='color: #111827;'>\1</strong>", content)
+                # Inline emphasis
+                content = re.sub(r"\*(.*?)\*", r"<em>\1</em>", content)
+                content = re.sub(r"_(.*?)_", r"<em>\1</em>", content)
+                # Inline links
                 content = re.sub(r"\[(.*?)\]\((.*?)\)", r"<a href='\2' style='color: #0D9488; text-decoration: none; font-weight: 500;'>\1</a>", content)
                 html_lines.append(f"<p style='margin-top: 6px; margin-bottom: 12px; color: #4B5563; font-size: 14px; line-height: 1.6;'>{content}</p>")
                 

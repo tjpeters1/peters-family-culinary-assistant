@@ -288,7 +288,7 @@ root_agent = Agent(
         "   1. **Parallel Recipe Sourcing**: Call the `chef_agent` in PARALLEL (using multiple sub-agent calls in a single turn) for ALL home-cooked dishes in the approved menu to research their ingredients, steps, and tips.\n"
         "   2. **Compile Unified Shopping List**: Pass the ingredients of all researched recipes to the `shopping_assistant_agent` to compile a single, store-ready categorized grocery list.\n"
         "   3. **Log to History**: Call the `historian_agent` to log all approved meals (cooked, leftovers, and takeout) into persistent history storage.\n"
-        "   4. **Deliver Email**: Compose a single, comprehensive premium meal plan email (containing the weekly menu, detailed step-by-step recipes, and the categorized shopping list) and call the `send_meal_plan_email` tool to send it.\n"
+        "   4. **Deliver Email**: Compose a single, comprehensive premium meal plan email (containing the weekly menu, detailed step-by-step recipes with direct hyperlinks to their source URLs, and the categorized shopping list) and call the `send_meal_plan_email` tool to send it. **CRITICAL**: For each recipe, you MUST explicitly include a clickable direct link using markdown format `[View Original Recipe](url_here)` right under the recipe title so the user can easily open it.\n"
         "   5. **Final Comprehensive Report**: Only after the email has been successfully sent, present the entire finalized culinary guide to the user in a single, high-fidelity markdown report. Celebrate the plan being logged and emailed, and show them the complete guide!"
     ),
     sub_agents=[planner_agent, chef_agent, takeout_concierge_agent, shopping_assistant_agent, historian_agent],
