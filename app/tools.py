@@ -15,6 +15,8 @@
 import os
 import json
 import datetime
+import asyncio
+import gzip
 from pathlib import Path
 from typing import Literal, Optional, List, Dict, Any
 
@@ -132,6 +134,151 @@ def add_meal_to_history(
         return {"status": "success", "message": "Meal added to history successfully.", "entry": entry}
     except Exception as e:
         return {"status": "error", "message": f"Failed to save meal to history: {str(e)}"}
+
+ACTIVE_HISTORY_PATH = DATA_DIR / "history.json"
+ARCHIVE_HISTORY_PATH = DATA_DIR / "history_archive.json.gz"
+SUMMARY_HISTORY_PATH = DATA_DIR / "history_summary.json"
+
+MAX_ACTIVE_ENTRIES = 50
+KEEP_ACTIVE_ENTRIES = 15
+
+async def read_json_async(path: Path) -> List[Dict[str, Any]]:
+    """Helper to read JSON file asynchronously in a thread pool."""
+    if not path.exists():
+        return []
+    def _read():
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return await asyncio.to_thread(_read)
+
+async def write_json_async(path: Path, data: Any) -> None:
+    """Helper to write JSON file asynchronously in a thread pool."""
+    def _write():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    await asyncio.to_thread(_write)
+
+async def add_meal_to_history_async(
+    date: str,
+    dish: str,
+    meal_type: Literal["dinner", "lunch", "breakfast", "takeout"],
+    eaters: List[str],
+    restaurant: Optional[str] = None,
+    notes: Optional[str] = ""
+) -> Dict[str, Any]:
+    """Appends a newly consumed meal or takeout dish to the active history asynchronously and triggers background compaction.
+
+    Args:
+        date: The date of the meal (format: YYYY-MM-DD).
+        dish: The name of the dish or meal consumed.
+        meal_type: The type of meal (e.g., 'dinner', 'takeout').
+        eaters: List of family members who ate the meal.
+        restaurant: The restaurant name (required if meal_type is 'takeout').
+        notes: Optional comments about the meal.
+
+    Returns:
+        A dictionary summarizing the status of the operation and the saved entry.
+    """
+    entry = {
+        "date": date,
+        "meal_type": meal_type,
+        "dish": dish,
+        "eaters": eaters,
+        "notes": notes
+    }
+    if restaurant:
+        entry["restaurant"] = restaurant
+
+    try:
+        # Read, update, and write active history asynchronously
+        history = await read_json_async(ACTIVE_HISTORY_PATH)
+        history.append(entry)
+        await write_json_async(ACTIVE_HISTORY_PATH, history)
+
+        # Trigger compaction in a non-blocking background task if length exceeds limit
+        if len(history) > MAX_ACTIVE_ENTRIES:
+            asyncio.create_task(compact_history_background_task(history))
+
+        return {"status": "success", "message": "Meal added to history asynchronously.", "entry": entry}
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to save meal asynchronously: {str(e)}"}
+
+async def compact_history_background_task(active_history: List[Dict[str, Any]]) -> None:
+    """Background task that archives older history entries and recompiles the culinary memory summary."""
+    try:
+        # Split into entries to archive vs. entries to keep active
+        to_archive = active_history[:-KEEP_ACTIVE_ENTRIES]
+        to_keep = active_history[-KEEP_ACTIVE_ENTRIES:]
+
+        # 1. Save to gzip compressed archive
+        def _archive_write():
+            existing_archive = []
+            if ARCHIVE_HISTORY_PATH.exists():
+                try:
+                    with gzip.open(ARCHIVE_HISTORY_PATH, "rt", encoding="utf-8") as f:
+                        existing_archive = json.load(f)
+                except Exception:
+                    existing_archive = []
+
+            existing_archive.extend(to_archive)
+
+            with gzip.open(ARCHIVE_HISTORY_PATH, "wt", encoding="utf-8") as f:
+                json.dump(existing_archive, f, indent=2)
+
+        await asyncio.to_thread(_archive_write)
+
+        # 2. Rewrite active history
+        await write_json_async(ACTIVE_HISTORY_PATH, to_keep)
+
+        # 3. Compile culinary preference memory summary from the archived entries
+        await generate_culinary_memory_summary(to_archive)
+    except Exception as e:
+        print(f"Background Task Error: Failed during history compaction: {str(e)}")
+
+async def generate_culinary_memory_summary(archived_entries: List[Dict[str, Any]]) -> None:
+    """Invokes Gemini to analyze archived meals and recompile a highly compressed long-term profile summary."""
+    try:
+        from google.genai import Client
+        
+        existing_summary = ""
+        if SUMMARY_HISTORY_PATH.exists():
+            def _read_sum():
+                with open(SUMMARY_HISTORY_PATH, "r", encoding="utf-8") as f:
+                    return f.read()
+                
+            try:
+                existing_summary = await asyncio.to_thread(_read_sum)
+            except Exception:
+                existing_summary = ""
+
+        prompt = (
+            f"You are a Culinary Memory Compactor. Analyze these newly archived family meals:\n"
+            f"{json.dumps(archived_entries, indent=2)}\n\n"
+            f"And incorporate them into the existing historical preference profile summary:\n"
+            f"{existing_summary}\n\n"
+            f"Output a highly dense, summarized JSON profile of long-term habits. Group by:\n"
+            f"1. Frequently eaten dishes (count, rating, notes).\n"
+            f"2. Takeout habits (highly rated restaurants, favorite dishes, frequency).\n"
+            f"3. Flavor and protein trends (e.g. 'Beef on Mondays, fish avoided').\n"
+            f"Keep the summary compact, clean, and optimized to fit under 200 tokens!"
+        )
+
+        client = Client()
+        response = await asyncio.to_thread(
+            client.models.generate_content,
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+        summary_text = response.text
+        if summary_text:
+            def _write_sum():
+                with open(SUMMARY_HISTORY_PATH, "w", encoding="utf-8") as f:
+                    f.write(summary_text)
+            await asyncio.to_thread(_write_sum)
+    except Exception as e:
+        print(f"Background Task Error: Failed to generate culinary memory summary: {str(e)}")
 
 def search_local_restaurants(cuisine: Optional[str] = None) -> List[Dict[str, Any]]:
     """Searches for premium local restaurants within 7 miles of 731 N. Cuyler, Oak Park, IL.

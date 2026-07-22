@@ -29,6 +29,7 @@ from app.tools import (
     get_household_member_profile,
     get_meal_history,
     add_meal_to_history,
+    add_meal_to_history_async,
     get_preferred_blogs,
     search_recipe_blogs,
     get_current_date,
@@ -264,11 +265,11 @@ historian_agent = Agent(
         "To perform this task:\n"
         "1. Retrieve the current date using `get_current_date` to understand what today's date is.\n"
         "2. Deduce the correct YYYY-MM-DD date for each planned meal of the week relative to today (e.g. if today is Tuesday, Monday is yesterday, Wednesday is tomorrow, etc.).\n"
-        "3. For each meal (cooked, leftovers, takeout), log it by calling `add_meal_to_history` with the calculated date, dish, eaters, and any notes/restaurant names.\n"
+        "3. For each meal (cooked, leftovers, takeout), log it by calling `add_meal_to_history_async` with the calculated date, dish, eaters, and any notes/restaurant names.\n"
         "4. After successfully logging all items, return the logged entries and status using the HistoricalSaveResult schema.\n"
         "5. CRITICAL: Your task is strictly limited to logging meals to history. Once you populate the HistoricalSaveResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
-    tools=[add_meal_to_history, get_meal_history, get_current_date] + replay_fallback_tools
+    tools=[add_meal_to_history_async, get_meal_history, get_current_date] + replay_fallback_tools
 )
 
 # ==========================================
