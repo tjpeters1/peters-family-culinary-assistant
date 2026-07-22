@@ -18,6 +18,7 @@ import datetime
 import asyncio
 import gzip
 from pathlib import Path
+import re
 from typing import Literal, Optional, List, Dict, Any
 
 BASE_DIR = Path(__file__).parent.resolve()
@@ -281,9 +282,7 @@ async def generate_culinary_memory_summary(archived_entries: List[Dict[str, Any]
         print(f"Background Task Error: Failed to generate culinary memory summary: {str(e)}")
 
 def search_local_restaurants(cuisine: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Searches for premium local restaurants within 7 miles of 731 N. Cuyler, Oak Park, IL.
-    
-    Includes distances (under 7 miles), Yelp/Google Business ratings, and specialties.
+    """Searches for premium local restaurants within 7 miles of Oak Park, IL.
 
     Args:
         cuisine: Optional filter for restaurant cuisine (e.g. 'Mexican', 'Italian', 'Pizza', 'Burgers', 'Asian').
@@ -797,4 +796,45 @@ def confirm_and_execute_meal_plan(proposal: str, email_address: str) -> Dict[str
         "status": "approved",
         "message": f"Meal plan proposal was successfully approved! Proceeding to fetch detailed recipes, compile the shopping list, log to history, and deliver the final email to {email_address}."
     }
+
+def redact_pii(text: str) -> str:
+    """Redacts common PII from text, such as street addresses, phone numbers, and full emails."""
+    if not text:
+        return ""
+    
+    # 1. Redact street address pattern (e.g. 731 N. Cuyler, or any street number + words + street/ave/rd/lane etc)
+    text = re.sub(r"\b\d{3,5}\s+[NnSsEeWw]?\.?\s*[A-Za-z0-9\s]+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Lane|Ln|Way|Cuyler)\b", "[REDACTED ADDRESS]", text, flags=re.IGNORECASE)
+    
+    # 2. Redact phone numbers
+    text = re.sub(r"\b(?:\+?1[-. ]?)?\(?[2-9]\d{2}\)?[-. ]?\d{3}[-. ]?\d{4}\b", "[REDACTED PHONE]", text)
+    
+    # 3. Redact real emails (except mock example.com emails)
+    email_regex = r"\b[A-Za-z0-9._%+-]+@(?!(?:example|mock)\.com\b)[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+    text = re.sub(email_regex, "[REDACTED EMAIL]", text)
+    
+    return text
+
+def write_structured_telemetry_log(agent_name: str, intent: str, outcome: str, duration_sec: float, status: str = "success") -> None:
+    """Logs agent intent vs outcome to a structured JSONL telemetry file, redacting any PII."""
+    log_file = DATA_DIR / "agent_actions.jsonl"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Run PII redactor on all values
+    clean_intent = redact_pii(intent)
+    clean_outcome = redact_pii(outcome)
+    
+    log_entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "agent_name": agent_name,
+        "intent": clean_intent,
+        "outcome": clean_outcome,
+        "duration_seconds": round(duration_sec, 3),
+        "status": status
+    }
+    
+    try:
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        print(f"Failed to write structured log: {str(e)}")
 

@@ -36,10 +36,13 @@ from app.tools import (
     get_current_date,
     send_meal_plan_email,
     confirm_and_execute_meal_plan,
-    search_local_restaurants
+    search_local_restaurants,
+    write_structured_telemetry_log,
+    redact_pii
 )
 
 import re
+import time
 
 # ==========================================
 # Runtime Security Guardrails & Safety Configs
@@ -59,17 +62,17 @@ culinary_safety_settings = [
     ),
 ]
 
-def prompt_injection_guardrail_callback(callback_context: CallbackContext) -> None:
-    """Inspects the user input content for common prompt injection patterns and raises ValueError if detected."""
+def structured_logging_before_callback(callback_context: CallbackContext) -> None:
+    """Callback triggered before any agent starts executing. Captures the intent, start time, and applies prompt injection checks if it's the root agent."""
+    # 1. Start stopwatch and capture intent (user input content)
+    callback_context.state["start_time"] = time.time()
+    
     user_content = callback_context.user_content
-    if not user_content:
-        return
-        
-    text_to_scan = ""
+    intent_str = ""
     if isinstance(user_content, str):
-        text_to_scan = user_content
+        intent_str = user_content
     elif hasattr(user_content, "parts") and user_content.parts:
-        text_to_scan = " ".join([getattr(part, "text", "") for part in user_content.parts if getattr(part, "text", "")])
+        intent_str = " ".join([getattr(part, "text", "") for part in user_content.parts if getattr(part, "text", "")])
     elif isinstance(user_content, list):
         parts_list = []
         for item in user_content:
@@ -77,10 +80,13 @@ def prompt_injection_guardrail_callback(callback_context: CallbackContext) -> No
                 parts_list.append(item)
             elif hasattr(item, "parts") and item.parts:
                 parts_list.extend([getattr(p, "text", "") for p in item.parts if getattr(p, "text", "")])
-        text_to_scan = " ".join(parts_list)
+        intent_str = " ".join(parts_list)
         
-    if text_to_scan:
-        text_lower = text_to_scan.lower()
+    callback_context.state["intent_str"] = intent_str
+    
+    # 2. Run Security Prompt Injection Guardrail if it's the orchestrator agent
+    if callback_context.agent_name == "peters_family_culinary_assistant" and intent_str:
+        text_lower = intent_str.lower()
         patterns = [
             r"ignore previous instructions",
             r"system prompt",
@@ -91,6 +97,40 @@ def prompt_injection_guardrail_callback(callback_context: CallbackContext) -> No
         for pattern in patterns:
             if re.search(pattern, text_lower):
                 raise ValueError("Security Violation: Prompt injection attempt detected.")
+
+def structured_logging_after_callback(callback_context: CallbackContext) -> None:
+    """Callback triggered after any agent finishes executing. Calculates duration and records structured logs (intent vs outcome), omitting PII."""
+    start_time = callback_context.state.get("start_time")
+    duration = time.time() - start_time if start_time else 0.0
+    
+    # Extract intent
+    intent = callback_context.state.get("intent_str", "N/A")
+    
+    # Extract outcome
+    outcome = ""
+    output = callback_context.output
+    if output is not None:
+        if isinstance(output, str):
+            outcome = output
+        elif hasattr(output, "model_dump_json"):
+            outcome = output.model_dump_json()
+        else:
+            outcome = str(output)
+            
+    # Determine execution status
+    status = "success"
+    if callback_context.error:
+        status = "error"
+        outcome = f"Error: {str(callback_context.error)}"
+        
+    # Write Redacted Structured Log
+    write_structured_telemetry_log(
+        agent_name=callback_context.agent_name,
+        intent=intent,
+        outcome=outcome,
+        duration_sec=duration,
+        status=status
+    )
 
 # ==========================================
 # Replay fallback tools to prevent ValueError during session restoration
@@ -343,7 +383,8 @@ root_agent = Agent(
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     generate_content_config=types.GenerateContentConfig(safety_settings=culinary_safety_settings),
-    before_agent_callback=prompt_injection_guardrail_callback,
+    before_agent_callback=structured_logging_before_callback,
+    after_agent_callback=structured_logging_after_callback,
     instruction=(
         "You are the Peters Family Culinary Assistant, an elite personal chef and meal planning coordinator.\n"
         "You lead a team of specialized subagents to deliver a premium, high-fidelity human-in-the-loop culinary planning experience for T.J., Nikki, Jackson, Alice, and Daphne.\n"
