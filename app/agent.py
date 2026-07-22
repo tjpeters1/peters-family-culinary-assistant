@@ -271,7 +271,8 @@ planner_agent = Agent(
         "   - If no specific effort level is requested for a day, default to a varied mix of Low, Medium, and High effort dishes across the cooked days of the week (e.g. one High effort meal like slow-cooked pork/beef or complex homemade pasta, some Medium effort meals, and some Low effort meals).\n"
         "7. Note: Family favorite dishes are a guide, not a strict limit. Feel free to introduce new, interesting dishes that fit their flavor preferences!\n"
         "8. Once your plan is complete, format it into the WeeklyMealPlan schema and return it.\n"
-        "9. CRITICAL: Your task is strictly limited to drafting the proposal. Once you populate the WeeklyMealPlan schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with shopping or cooking tasks yourself."
+        "9. CRITICAL SILENCE CONSTRAINT: You must operate completely SILENTLY. Do NOT output any conversational text, progress updates, or draft proposals to the user. Perform all planning behind the scenes, populate the WeeklyMealPlan schema, and call `finish_task` immediately. Your entire response must consist ONLY of the tool call to `finish_task`.\n"
+        "10. CRITICAL: Your task is strictly limited to drafting the proposal. Once you populate the WeeklyMealPlan schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with shopping or cooking tasks yourself."
     ),
     tools=[list_household_members, get_household_member_profile, get_meal_history, get_current_date] + replay_fallback_tools
 )
@@ -295,7 +296,8 @@ chef_agent = Agent(
         "   - Elaborate the steps list into detailed, numbered, step-by-step instructions. Specify precise cooking techniques (e.g., 'sear', 'reduce', 'simmer'), cooking times, heat settings, and visual/temperature indicators (e.g., 'until gold-brown and juices run clear, about 6-8 minutes').\n"
         "   - Match the specific culinary style of the targeted blog (e.g., technical and science-backed for Serious Eats / Kenji's Grid, approachable and comforting for Smitten Kitchen, or visually beautiful and herb/spice-heavy for Half Baked Harvest).\n"
         "4. Return the finalized recipe structured in the RecipeResearchResult schema.\n"
-        "5. CRITICAL: Your task is strictly limited to researching recipes. Once you populate the RecipeResearchResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
+        "5. CRITICAL SILENCE CONSTRAINT: You must operate completely SILENTLY. Do NOT output any conversational thoughts, progress updates, or draft recipes to the user during your turns. Simply perform your tool calls and curation behind the scenes, and once you are done, populate the RecipeResearchResult schema and call `finish_task` immediately. Your entire response must consist ONLY of the tool call to `finish_task`. Direct text output is strictly prohibited.\n"
+        "6. CRITICAL: Your task is strictly limited to researching recipes. Once you populate the RecipeResearchResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[get_preferred_blogs, search_recipe_blogs] + replay_fallback_tools
 )
@@ -318,7 +320,8 @@ takeout_concierge_agent = Agent(
         "4. Interleave these fresh, highly rated suggestions with their traditional household favorites (like Pizza Bella, Taco Loco, and Burger Town) occasionally to maintain comfort while introducing premium local variety.\n"
         "5. Design the specific ordered items for each active family member participating in the takeout order, fully respecting their preferences and avoiding any stinky cheeses, olives, raw onions, or cilantro (which tastes like soap to Nikki!).\n"
         "6. Return the finalized plan structured in the TakeoutPlan schema.\n"
-        "7. CRITICAL: Your task is strictly limited to planning takeout. Once you populate the TakeoutPlan schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
+        "7. CRITICAL SILENCE CONSTRAINT: You must operate completely SILENTLY. Do NOT output any conversational text, progress updates, or draft plans to the user. Perform all planning behind the scenes, populate the TakeoutPlan schema, and call `finish_task` immediately. Your entire response must consist ONLY of the tool call to `finish_task`.\n"
+        "8. CRITICAL: Your task is strictly limited to planning takeout. Once you populate the TakeoutPlan schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[list_household_members, get_household_member_profile, search_local_restaurants] + replay_fallback_tools
 )
@@ -340,7 +343,8 @@ shopping_assistant_agent = Agent(
         "3. Organize the items into intuitive, store-friendly categories (e.g. Produce, Meat & Seafood, Dairy, Bakery, Pantry, Spices/Baking).\n"
         "4. Provide intelligent substitution suggestions, kid-friendly adjustments, or common pantry items the user might already have.\n"
         "5. Return the list structured in the ShoppingList schema.\n"
-        "6. CRITICAL: Your task is strictly limited to compiling the grocery shopping list. Once you populate the ShoppingList schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
+        "6. CRITICAL SILENCE CONSTRAINT: You must operate completely SILENTLY. Do NOT output any conversational text, progress updates, or draft lists to the user. Perform all listing tasks behind the scenes, populate the ShoppingList schema, and call `finish_task` immediately. Your entire response must consist ONLY of the tool call to `finish_task`.\n"
+        "7. CRITICAL: Your task is strictly limited to compiling the grocery shopping list. Once you populate the ShoppingList schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[] + replay_fallback_tools
 )
@@ -361,7 +365,8 @@ historian_agent = Agent(
         "2. Deduce the correct YYYY-MM-DD date for each planned meal of the week relative to today (e.g. if today is Tuesday, Monday is yesterday, Wednesday is tomorrow, etc.).\n"
         "3. For each meal (cooked, leftovers, takeout), log it by calling `add_meal_to_history_async` with the calculated date, dish, eaters, and any notes/restaurant names.\n"
         "4. After successfully logging all items, return the logged entries and status using the HistoricalSaveResult schema.\n"
-        "5. CRITICAL: Your task is strictly limited to logging meals to history. Once you populate the HistoricalSaveResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
+        "5. CRITICAL SILENCE CONSTRAINT: You must operate completely SILENTLY. Do NOT output any conversational text, progress updates, or logging summaries to the user. Perform all logging behind the scenes, populate the HistoricalSaveResult schema, and call `finish_task` immediately. Your entire response must consist ONLY of the tool call to `finish_task`.\n"
+        "6. CRITICAL: Your task is strictly limited to logging meals to history. Once you populate the HistoricalSaveResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[add_meal_to_history_async, get_meal_history, get_current_date] + replay_fallback_tools
 )
@@ -404,12 +409,12 @@ root_agent = Agent(
         "   - Note: If the user approves the tool, you will receive a success response and can proceed to PHASE 2.\n"
         "   - If the user rejects the tool, or requests modifications, report the feedback, DO NOT save anything to history, and invite them to refine the constraints.\n\n"
         "#### PHASE 2: Execution (Only after approval)\n"
-        "   Do NOT output conversational chatter, progress updates, or intermediate recipes to the user during this phase. Complete all backend steps silently in a single uninterrupted execution cycle:\n"
-        "   1. **Parallel Recipe Sourcing**: Call the `chef_agent` in PARALLEL (using multiple sub-agent calls in a single turn) for ALL home-cooked dishes in the approved menu to research their ingredients, steps, and tips.\n"
-        "   2. **Compile Unified Shopping List**: Pass the ingredients of all researched recipes to the `shopping_assistant_agent` to compile a single, store-ready categorized grocery list.\n"
+        "   CRITICAL SILENCE CONSTRAINT: You must operate completely SILENTLY during this phase. Do NOT output any conversational chatter, progress updates, intermediate recipe contents, or text messages of any kind to the user while performing these steps. Complete all backend steps silently in a single uninterrupted execution cycle:\n"
+        "   1. **Parallel Recipe Sourcing**: Call the `chef_agent` in PARALLEL (using multiple sub-agent calls in a single turn) for ALL home-cooked dishes in the approved menu to research their ingredients, steps, and tips. Do NOT print or echo any received recipes to the user yet.\n"
+        "   2. **Compile Unified Shopping List**: Pass the ingredients of all researched recipes to the `shopping_assistant_agent` to compile a single, store-ready categorized grocery list. Do NOT print the shopping list yet.\n"
         "   3. **Log to History**: Call the `historian_agent` to log all approved meals (cooked, leftovers, and takeout) into persistent history storage.\n"
         "   4. **Deliver Email**: Compose a single, comprehensive premium meal plan email (containing the weekly menu, detailed step-by-step recipes with direct hyperlinks to their source URLs, and the categorized shopping list) and call the `send_meal_plan_email` tool to send it. **CRITICAL**: For each recipe, you MUST explicitly include a clickable direct link using markdown format `[View Original Recipe](url_here)` right under the recipe title so the user can easily open it.\n"
-        "   5. **Final Comprehensive Report**: Only after the email has been successfully sent, present the entire finalized culinary guide to the user in a single, high-fidelity markdown report. Celebrate the plan being logged and emailed, and show them the complete guide!"
+        "   5. **Final Comprehensive Report**: Only after the email has been successfully sent, present the entire finalized culinary guide to the user in a single, high-fidelity markdown report. Celebrate the plan being logged and emailed, and show them the complete guide! Inside this final report, you MUST include a complete, beautifully structured Weekly Menu Table containing the following columns: **Day**, **Dinner/Dish**, **Protein Type**, **Cooking Leader**, **Effort Level**, and **Active Eaters** (specifying any custom kids' alternative meals designed for those days)."
     ),
     sub_agents=[planner_agent, chef_agent, takeout_concierge_agent, shopping_assistant_agent, historian_agent],
     tools=[confirm_meal_plan_tool, send_meal_plan_email]
