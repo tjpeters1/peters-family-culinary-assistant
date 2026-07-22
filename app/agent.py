@@ -65,12 +65,24 @@ def fallback_historian_agent(request: str) -> Dict[str, Any]:
     return {"status": "success", "message": "Replay fallback"}
 fallback_historian_agent.__name__ = "historian_agent"
 
+def fallback_send_meal_plan_email(subject: str, body_markdown: str, email_address: str) -> Dict[str, Any]:
+    """Fallback tool representing send_meal_plan_email to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_send_meal_plan_email.__name__ = "send_meal_plan_email"
+
+def fallback_confirm_and_execute_meal_plan(proposal: str, email_address: str) -> Dict[str, Any]:
+    """Fallback tool representing confirm_and_execute_meal_plan to prevent tool lookup errors during session replay."""
+    return {"status": "success", "message": "Replay fallback"}
+fallback_confirm_and_execute_meal_plan.__name__ = "confirm_and_execute_meal_plan"
+
 replay_fallback_tools = [
     fallback_planner_agent,
     fallback_chef_agent,
     fallback_takeout_concierge_agent,
     fallback_shopping_assistant_agent,
-    fallback_historian_agent
+    fallback_historian_agent,
+    fallback_send_meal_plan_email,
+    fallback_confirm_and_execute_meal_plan
 ]
 
 # ==========================================
@@ -163,7 +175,8 @@ planner_agent = Agent(
         "   - Check the user's instructions for any specific daily effort requests (e.g. 'Make Tuesday low effort' or 'I want Wednesday to be low effort').\n"
         "   - If no specific effort level is requested for a day, default to a varied mix of Low, Medium, and High effort dishes across the cooked days of the week (e.g. one High effort meal like slow-cooked pork/beef or complex homemade pasta, some Medium effort meals, and some Low effort meals).\n"
         "7. Note: Family favorite dishes are a guide, not a strict limit. Feel free to introduce new, interesting dishes that fit their flavor preferences!\n"
-        "8. Once your plan is complete, format it into the WeeklyMealPlan schema and return it."
+        "8. Once your plan is complete, format it into the WeeklyMealPlan schema and return it.\n"
+        "9. CRITICAL: Your task is strictly limited to drafting the proposal. Once you populate the WeeklyMealPlan schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with shopping or cooking tasks yourself."
     ),
     tools=[list_household_members, get_household_member_profile, get_meal_history, get_current_date] + replay_fallback_tools
 )
@@ -183,7 +196,8 @@ chef_agent = Agent(
         "1. Retrieve the list of preferred blogs using `get_preferred_blogs`.\n"
         "2. Run a search for the requested dish on one of those preferred blogs using `search_recipe_blogs`. If the dish is best suited for a parent's specific blog (e.g., T.J. prefers Serious Eats and Kenji's Grid; Nikki prefers Smitten Kitchen and Half Baked Harvest), target that blog specifically!\n"
         "3. Extract and synthesize the recipe title, list of ingredients, cooking steps, source URL (with working link), and append helpful chef tips.\n"
-        "4. Return the recipe structured in the RecipeResearchResult schema."
+        "4. Return the recipe structured in the RecipeResearchResult schema.\n"
+        "5. CRITICAL: Your task is strictly limited to researching recipes. Once you populate the RecipeResearchResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[get_preferred_blogs, search_recipe_blogs] + replay_fallback_tools
 )
@@ -205,7 +219,8 @@ takeout_concierge_agent = Agent(
         "3. Interleave and select highly rated restaurants (from Yelp/Google Business ratings) that match the family profiles. Avoid dining fatigue by rotating restaurant recommendations and trying new local cuisines (such as Maya Del Sol for Mexican, Kettlestrings Tavern for American, Citrine Cafe for Mediterranean, or Mora Asian Kitchen for Asian Fusion).\n"
         "4. Interleave these fresh, highly rated suggestions with their traditional household favorites (like Pizza Bella, Taco Loco, and Burger Town) occasionally to maintain comfort while introducing premium local variety.\n"
         "5. Design the specific ordered items for each active family member participating in the takeout order, fully respecting their preferences and avoiding any stinky cheeses, olives, raw onions, or cilantro (which tastes like soap to Nikki!).\n"
-        "6. Return the finalized plan structured in the TakeoutPlan schema."
+        "6. Return the finalized plan structured in the TakeoutPlan schema.\n"
+        "7. CRITICAL: Your task is strictly limited to planning takeout. Once you populate the TakeoutPlan schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[list_household_members, get_household_member_profile, search_local_restaurants] + replay_fallback_tools
 )
@@ -226,7 +241,8 @@ shopping_assistant_agent = Agent(
         "2. Combine duplicate or overlapping items (e.g., if multiple recipes use garlic or olive oil, list them cleanly).\n"
         "3. Organize the items into intuitive, store-friendly categories (e.g. Produce, Meat & Seafood, Dairy, Bakery, Pantry, Spices/Baking).\n"
         "4. Provide intelligent substitution suggestions, kid-friendly adjustments, or common pantry items the user might already have.\n"
-        "5. Return the list structured in the ShoppingList schema."
+        "5. Return the list structured in the ShoppingList schema.\n"
+        "6. CRITICAL: Your task is strictly limited to compiling the grocery shopping list. Once you populate the ShoppingList schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[] + replay_fallback_tools
 )
@@ -246,7 +262,8 @@ historian_agent = Agent(
         "1. Retrieve the current date using `get_current_date` to understand what today's date is.\n"
         "2. Deduce the correct YYYY-MM-DD date for each planned meal of the week relative to today (e.g. if today is Tuesday, Monday is yesterday, Wednesday is tomorrow, etc.).\n"
         "3. For each meal (cooked, leftovers, takeout), log it by calling `add_meal_to_history` with the calculated date, dish, eaters, and any notes/restaurant names.\n"
-        "4. After successfully logging all items, return the logged entries and status using the HistoricalSaveResult schema."
+        "4. After successfully logging all items, return the logged entries and status using the HistoricalSaveResult schema.\n"
+        "5. CRITICAL: Your task is strictly limited to logging meals to history. Once you populate the HistoricalSaveResult schema, you MUST call `finish_task` immediately to return control to the root orchestrator. Do NOT attempt to run any other tools, send emails, or proceed with other tasks yourself."
     ),
     tools=[add_meal_to_history, get_meal_history, get_current_date] + replay_fallback_tools
 )
